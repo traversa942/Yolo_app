@@ -5,7 +5,7 @@ from yolov5.models.common import DetectMultiBackend
 from yolov5.utils.general import check_img_size, non_max_suppression, scale_coords
 from yolov5.utils.torch_utils import select_device
 
-app = Flask(_name_)
+app = Flask(__name__)
 
 # Load the YOLO model
 device = select_device('')  # Automatically select CPU or GPU
@@ -52,5 +52,5 @@ def detect():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-if _name_ == '_main_':
+if __name__ == '__main__':
     app.run(debug=True, host="0.0.0.0", port=5000)
