@@ -1,44 +1,53 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_file
 from ultralytics import YOLO
-from PIL import Image
-import numpy as np
+from PIL import Image, ImageDraw
+import io
+import os
 
 app = Flask(__name__)
 
-# Load the YOLOv8 pre-trained model
-model = YOLO("yolov8n.pt")  # Use 'yolov8s.pt', 'yolov8m.pt', etc., for larger models
+# Load the YOLOv8 model
+model = YOLO("yolov8n.pt")  # Replace with yolov8s.pt, yolov8m.pt, etc., for different sizes
 
 @app.route('/detect', methods=['POST'])
 def detect():
     try:
-        # Check if an image is included in the request
+        # Check if an image file is in the request
         if 'image' not in request.files:
             return jsonify({"error": "No image file provided"}), 400
 
-        # Load the image from the request
+        # Load the image
         image_file = request.files['image']
-        image = Image.open(image_file.stream)
+        image = Image.open(image_file.stream).convert('RGB')
 
-        # Convert the image to a NumPy array for YOLO inference
+        # Perform inference
         results = model(image)
 
-        # Format results into a JSON response
-        detections = []
+        # Draw bounding boxes on the image
+        draw = ImageDraw.Draw(image)
         for box in results[0].boxes:
-            detections.append({
-                "label": model.names[int(box.cls)],
-                "confidence": float(box.conf),
-                "x_min": int(box.xyxy[0][0]),
-                "y_min": int(box.xyxy[0][1]),
-                "x_max": int(box.xyxy[0][2]),
-                "y_max": int(box.xyxy[0][3]),
-            })
+            xyxy = box.xyxy[0]  # Bounding box coordinates
+            cls = int(box.cls)  # Class index
+            conf = box.conf     # Confidence score
 
-        return jsonify(detections)
+            # Draw the bounding box and label
+            draw.rectangle(xyxy.tolist(), outline="red", width=3)
+            label = f"{model.names[cls]}: {conf:.2f}"
+            draw.text((xyxy[0], xyxy[1] - 10), label, fill="red")
+
+        # Save the image to a BytesIO object
+        img_io = io.BytesIO()
+        image.save(img_io, format="JPEG")
+        img_io.seek(0)
+
+        # Send the image back to the client
+        return send_file(img_io, mimetype='image/jpeg')
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
 
 if __name__ == '__main__':
-    app.run(debug=True, host="0.0.0.0", port=5000)
+    # Run the app
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port, debug=True)
