@@ -6,7 +6,7 @@ import numpy as np
 app = Flask(__name__)
 
 # Load the YOLOv8 pre-trained model
-model = YOLO("yolov8m.pt")  # Use 'yolov8s.pt', 'yolov8m.pt', etc., for larger models
+model = YOLO("yolov8n.pt")  # Use 'yolov8s.pt', 'yolov8m.pt', etc., for larger models
 
 @app.route('/detect', methods=['POST'])
 def detect():
