@@ -3,7 +3,7 @@ from ultralytics import YOLO
 from PIL import Image
 import numpy as np
 
-app = Flask(_name_)
+app = Flask(__name__)
 
 # Load the YOLOv8 pre-trained model
 model = YOLO("yolov8m.pt")  # Use 'yolov8s.pt', 'yolov8m.pt', etc., for larger models
@@ -40,5 +40,5 @@ def detect():
         return jsonify({"error": str(e)}), 500
 
 
-if _name_ == '_main_':
+if __name__ == '__main__':
     app.run(debug=True, host="0.0.0.0", port=5000)
